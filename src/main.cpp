@@ -6,7 +6,7 @@
 #define DEBUG 1
 bool stringComplete = false;
 String msg = "";
-struct coords
+struct coord
 {
   float Latitude = 0;
   double Longitude = 0;
@@ -19,12 +19,34 @@ struct coords
 void AT_init()
 {
 #ifdef DEBUG
-  Serial.println("...AT Auto Baud rate set...");
+  Serial.print("\nInitializing SIM7600.");
 #endif
   delay(500);
   Serial2.println("AT");
   delay(100);
-  Serial2.println("AT");
+  while (Serial2.available())
+  {
+    // get the new byte:
+    Serial.print(".");
+    delay(40);
+    char inChar = (char)Serial2.read();
+    // add it to the inputString:
+    msg += inChar;
+    if (msg == "OK")
+      break;
+  }
+  Serial.println("Successfully Init SIM7600");
+  delay(500);
+}
+
+void getCoord()
+{
+  Serial2.println("AT+CGPS=1");
+  delay(40);
+  Serial2.println("AT+CGPSINFO");
+  // delay(100);
+  // Serial2.println("AT+CGPS=0");
+  // delay(4000);
 }
 
 void serialEvent()
@@ -63,6 +85,8 @@ void setup()
 void loop()
 {
   serialEvent();
+  getCoord();
+  delay(2000);
 #ifdef DEBUG
   /*********To Send AT Commands through Serial monitor**********/
   if (Serial.available())
@@ -82,6 +106,12 @@ void loop()
       char buf[512];
       msg.toCharArray(buf, msg.length());
       char *token = strtok(buf, ":");
+      while (msg.indexOf(",,,,,,,,") > 0)
+        {
+          Serial2.println("AT+CGPSINFO");
+          delay(200);
+          serialEvent();
+        }
       token = strtok(NULL, ":");
       data.Latitude = atof(strtok(token, ",")) / 100;
       data.Latitude = mm2dd(data.Latitude);
