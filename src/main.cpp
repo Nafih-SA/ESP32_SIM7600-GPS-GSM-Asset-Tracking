@@ -44,6 +44,13 @@ void serialEvent()
   }
 }
 
+double mm2dd(double x)
+{
+  int intpart = (int)x;
+  double decpart = (x - intpart) * 5 / 3;
+  return (intpart + decpart);
+}
+
 /************ Setup ****************/
 void setup()
 {
@@ -76,11 +83,13 @@ void loop()
       msg.toCharArray(buf, msg.length());
       char *token = strtok(buf, ":");
       token = strtok(NULL, ":");
-      data.Latitude = atof(strtok(token, ","));
+      data.Latitude = atof(strtok(token, ",")) / 100;
+      data.Latitude = mm2dd(data.Latitude);
       data.Hem = strtok(NULL, ",");
-      data.Longitude = atof(strtok(NULL, ","));
+      data.Longitude = atof(strtok(NULL, ",")) / 100;
+      data.Longitude = mm2dd(data.Longitude);
 #ifdef DEBUG
-      Serial.printf("\t\t %s \nLatitude: %10.6f \nLongitude: %11.6f", data.Hem, data.Latitude, data.Longitude);
+      Serial.printf("\t\t%s \nLatitude: %10.6f \nLongitude: %11.6f", data.Hem, data.Latitude, data.Longitude);
 #endif
     }
     msg = "";
