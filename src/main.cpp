@@ -48,9 +48,8 @@ void setup()
 void loop()
 {
   serialEvent();
-
-  /*********To Send AT Commands through Serial monitor**********/
 #ifdef DEBUG
+  /*********To Send AT Commands through Serial monitor**********/
   if (Serial.available())
   {                               // If anything comes in Serial (USB),
     Serial2.write(Serial.read()); // read it and send it out Serial2
