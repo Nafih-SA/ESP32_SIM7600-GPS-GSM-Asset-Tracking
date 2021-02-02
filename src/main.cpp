@@ -6,9 +6,12 @@
 #define DEBUG 1
 #define HOST "api.asksensors.com"
 #define HOST2 "httpbin.org"
+#define interval 30000
 const char *apiKeyIn = "E3Rqsw9UksfyZfpcX4gbBJ7cTRurlweT";
 bool stringComplete = false;
 String msg = "";
+unsigned long previousMillis = 0; 
+
 struct coord
 {
   float Latitude = 0;
@@ -126,10 +129,9 @@ void setup()
 /************ Loop ****************/
 void loop()
 {
+
   serialEvent();
-  // getCoord();
-  // setCoord(data.Latitude, data.Longitude);
-  // delay(2000);
+  unsigned long currentMillis = millis();
 #ifdef DEBUG
   /*********To Send AT Commands through Serial monitor**********/
   if (Serial.available())
@@ -164,10 +166,15 @@ void loop()
 #ifdef DEBUG
       Serial.printf("\t\t%s \nLatitude: %10.6f \nLongitude: %11.6f", data.Hem, data.Latitude, data.Longitude);
 #endif
-      delay(500);
       setCoord(data.Latitude, data.Longitude);
     }
     msg = "";
     stringComplete = false;
+  }  
+
+  else if (currentMillis - previousMillis >= interval)
+  {
+    previousMillis = currentMillis;
+    getCoord();
   }
 }
