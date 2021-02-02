@@ -4,12 +4,15 @@
 
 /********** Macros & Varaibles ******************/
 #define DEBUG 1
+#define HOST "api.asksensors.com"
+#define HOST2 "httpbin.org"
+const char *apiKeyIn = "E3Rqsw9UksfyZfpcX4gbBJ7cTRurlweT";
 bool stringComplete = false;
 String msg = "";
 struct coord
 {
   float Latitude = 0;
-  double Longitude = 0;
+  float Longitude = 0;
   float speed = 0;
   char *Hem;
   char E_W;
@@ -73,6 +76,45 @@ double mm2dd(double x)
   return (intpart + decpart);
 }
 
+void setCoord(float lat, float lang)
+{
+#ifdef DEBUG
+  Serial.printf("\nSending Lat:%f & Long:%f to Web server\n", lat, lang);
+#endif
+  delay(50);
+  Serial2.print("AT+CHTTPACT=\"");
+  Serial2.print(HOST);
+  Serial2.print("\",80\r\n");
+  delay(2000);
+
+  String url = "GET http://api.asksensors.com/write/";
+  url += apiKeyIn;
+  url += "/?module1=";
+  url += String(lat,6);
+  url += ",+";
+  url += String(lang,6);
+  url += " HTTP/1.1\r\n";
+  Serial2.print(url);
+
+  delay(50);
+  Serial2.print("Host: ");
+  Serial2.print(HOST);
+  Serial2.write("\r\n");
+  
+  // delay(50);
+  // Serial2.print("User-Agent: MY WEB AGENT\r");
+  
+  // delay(50);
+  // Serial2.print("Content-Length: 0\r");
+
+  delay(50);
+  Serial2.print("\r\n");
+  delay(50);
+  Serial2.print("\r\n");
+  delay(50);
+  Serial2.println("\r\n");
+}
+
 /************ Setup ****************/
 void setup()
 {
@@ -85,8 +127,9 @@ void setup()
 void loop()
 {
   serialEvent();
-  getCoord();
-  delay(2000);
+  // getCoord();
+  // setCoord(data.Latitude, data.Longitude);
+  // delay(2000);
 #ifdef DEBUG
   /*********To Send AT Commands through Serial monitor**********/
   if (Serial.available())
@@ -107,11 +150,11 @@ void loop()
       msg.toCharArray(buf, msg.length());
       char *token = strtok(buf, ":");
       while (msg.indexOf(",,,,,,,,") > 0)
-        {
-          Serial2.println("AT+CGPSINFO");
-          delay(200);
-          serialEvent();
-        }
+      {
+        Serial2.println("AT+CGPSINFO");
+        delay(200);
+        serialEvent();
+      }
       token = strtok(NULL, ":");
       data.Latitude = atof(strtok(token, ",")) / 100;
       data.Latitude = mm2dd(data.Latitude);
@@ -121,6 +164,8 @@ void loop()
 #ifdef DEBUG
       Serial.printf("\t\t%s \nLatitude: %10.6f \nLongitude: %11.6f", data.Hem, data.Latitude, data.Longitude);
 #endif
+      delay(500);
+      setCoord(data.Latitude, data.Longitude);
     }
     msg = "";
     stringComplete = false;
